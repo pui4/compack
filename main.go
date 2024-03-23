@@ -16,14 +16,31 @@ type Jso struct {
 	Success bool     `json:"success"`
 }
 
-func getJson(url string, target interface{}) error {
-	r, err := myClient.Get(url)
+func getJson(url string) map[string]string {
+	// Make HTTP GET request to fetch the JSON data
+	resp, err := http.Get(url)
 	if err != nil {
-		return err
+		fmt.Println("Error fetching URL:", err)
+		return nil
 	}
-	defer r.Body.Close()
+	defer resp.Body.Close()
 
-	return json.NewDecoder(r.Body).Decode(target)
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		return nil
+	}
+
+	var data map[string]string
+
+	// Unmarshal the JSON into the struct
+	if err := json.Unmarshal(body, &data); err != nil {
+		fmt.Println("Error decoding JSON:", err)
+		return nil
+	}
+
+	return data
 }
 
 func downloadFile(filepath string, url string) error {
@@ -48,8 +65,7 @@ func downloadFile(filepath string, url string) error {
 
 func main() {
 	fmt.Println("Hello")
-	jso := Jso{}
-	getJson("https://dog-api.kinduff.com/api/facts", &jso)
-	fmt.Println(jso.Facts[0])
+	js := getJson("https://raw.githubusercontent.com/pui4/compack/main/data.json")
+	fmt.Println(js["discord"])
 	downloadFile("./poop.png", "https://gophercoding.com/img/logo-original.png")
 }
